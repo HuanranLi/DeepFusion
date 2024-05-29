@@ -25,7 +25,7 @@ from TransFusion import *
 import numpy as np
 import random
 
-# from lightning.pytorch import Trainer, seed_everything
+from lightning.pytorch import Trainer, seed_everything
 
 def main(args):
 

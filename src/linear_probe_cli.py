@@ -71,14 +71,14 @@ if __name__ == '__main__':
     if match_acc(original_test_accuracy, reproduced_test_accuracy, args.epsilon):
         print(f"Reproduced model's test accuracy {reproduced_test_accuracy:.4f} is within epsilon {args.epsilon} of original test accuracy {original_test_accuracy:.4f}.")
 
-        # seed_everything(123, workers=True)
+        seed_everything(123, workers=True)
 
         # Logger and checkpoint
         wandb_logger = WandbLogger(project="TransFusion", config = args)
         # Set up ModelCheckpoint
         checkpoint_callback = ModelCheckpoint(
-            monitor='FTval/loss',  # or any other metric you have like 'val_loss'
-            save_top_k=5,  # Saves only the best checkpoint
+            monitor='validation/loss',  # or any other metric you have like 'val_loss'
+            save_top_k=1,  # Saves only the best checkpoint
             mode='min',  # `min` for minimizing metric, `max` for maximizing metric
             auto_insert_metric_name=False  # Prevents redundant metric names in filename
         )
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                 accelerator='auto',
                                 logger=wandb_logger,
                                 callbacks=[checkpoint_callback],)
-                                # deterministic=True)
+                                deterministic=True)
 
 
         train_loader, val_loader = model.prep_LinearProbe_data(new_batch_size = args.batch_size, inference = args.inference)
