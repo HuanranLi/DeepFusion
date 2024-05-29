@@ -53,7 +53,7 @@ class DataModule_Template(pl.LightningDataModule):
                             batch_size=self.batch_size,
                             shuffle=False,
                             drop_last=True,
-                            num_workers = 4,
+                            num_workers = 8,
                             persistent_workers=True)
 
     def train_dataloader(self):
@@ -62,7 +62,7 @@ class DataModule_Template(pl.LightningDataModule):
                             shuffle=True,
                             drop_last=True,
                             collate_fn=self.collate_fn,
-                            num_workers = 4,
+                            num_workers = 8,
                             persistent_workers=True)
 
     def test_dataloader(self):
@@ -70,7 +70,7 @@ class DataModule_Template(pl.LightningDataModule):
                             batch_size=self.batch_size,
                             shuffle=False,
                             drop_last=True,
-                            num_workers = 4,
+                            num_workers = 8,
                             persistent_workers=True)
 
 
