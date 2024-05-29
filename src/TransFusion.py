@@ -113,17 +113,12 @@ class TransFusionModel(pl.LightningModule):
                         norm_type,
                         lr,
                         loss_temperature,
-                        feature_bank_size,
-                        num_classes,
-                        KNN_temp,
                         att_logging_count,
                         args):
 
         super().__init__()
         self.save_hyperparameters()
 
-        # # Initialize pretrained ResNet-18
-        #
 
         # Define the CNN architecture
         if args.backbone == 'resnet18':
@@ -131,12 +126,9 @@ class TransFusionModel(pl.LightningModule):
             self.backbone = nn.Sequential(*list(resnet18.children())[:-1])
             self.backbone_projector = nn.Linear(resnet18.fc.in_features, feature_dim)
         elif args.backbone == 'resnet50':
-            # Load the pre-trained ResNet-50 model
             resnet50 = models.resnet50()
             self.backbone = nn.Sequential(*list(resnet50.children())[:-1])
             self.backbone_projector = nn.Linear(resnet50.fc.in_features, feature_dim)
-
-
         elif args.backbone == 'CNN3':
             self.backbone = nn.Sequential(
                 nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),  # First convolutional layer
@@ -176,36 +168,10 @@ class TransFusionModel(pl.LightningModule):
         self.transfusion_projector = nn.Linear(feature_dim, output_size)
         self.criterion = NTXentLoss(temperature=loss_temperature)
 
-
-        self.k_choice = [25, 100]
-        self._init_feature_bank(feature_bank_size)
-        self.attn_imaging = self.hparams.att_logging_count > 0
-
         self.nan_limit = 5
         self.nan_count = 0
 
-    def _init_feature_bank(self, feature_bank_size):
-        # Initialize feature bank and labels
-        self.feature_bank_size = feature_bank_size
-        self.register_buffer("feature_bank", torch.randn(feature_bank_size, self.hparams.output_size))
-        self.register_buffer("feature_labels", torch.randint(0, self.hparams.num_classes, (feature_bank_size,)))
-        self.feature_bank_ptr = 0
-
-
-    def _update_feature_bank(self, features, labels):
-        batch_size = features.size(0)
-        ptr = self.feature_bank_ptr
-        assert self.feature_bank_size % batch_size == 0  # for simplicity
-
-        # Replace the features at ptr (oldest features first)
-        self.feature_bank[ptr:ptr + batch_size, :] = features.detach()
-        self.feature_labels[ptr:ptr + batch_size] = labels.detach()
-
-        # Move the pointer
-        self.feature_bank_ptr = (self.feature_bank_ptr + batch_size) % self.feature_bank_size
-
-
-    def forward(self, x, inference = False):
+    def forward(self, x, inference = False, attn_imaging = False):
 
         x = self.backbone(x)
         x = torch.flatten(x, start_dim=1)
@@ -217,18 +183,16 @@ class TransFusionModel(pl.LightningModule):
             if self.hparams.args.FFN_benchmark:
                 x = layer(x)
             else:
-                x = layer(x, attn_imaging = self.attn_imaging)  # Apply each layer in sequence
+                x = layer(x, attn_imaging = attn_imaging)  # Apply each layer in sequence
 
         x = self.transfusion_projector(x)
         return x
 
-    def on_train_epoch_start(self):
-        # Retrieve current learning rate from optimizer
-        lr = self.trainer.optimizers[0].param_groups[0]['lr']
-        # Log the learning rate
-        self.log('train/learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
-        self.attn_imaging = self.hparams.att_logging_count > 0
+    # def on_train_epoch_start(self):
+    #     # Retrieve current learning rate from optimizer
+    #     lr = self.trainer.optimizers[0].param_groups[0]['lr']
+    #     # Log the learning rate
+    #     self.log('train/learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
 
     def training_step(self, batch, batch_idx):
@@ -241,108 +205,40 @@ class TransFusionModel(pl.LightningModule):
         loss = self.criterion(y0, y1)
         self.log("train/loss", loss, batch_size=batch_size)
 
-        self._update_feature_bank(y0, labels)
         return loss
 
-    def validation_step(self, batch, batch_idx):
-        # Forward pass
-        (x0, x1), labels, _ = batch
-        # print(labels)
-        batch_size = x0.size(0)
-        input = torch.cat((x0, x1))
-        outputs = self(input)
+    # def validation_step(self, batch, batch_idx):
+    #     (x0, x1), labels, _ = batch
+    #
+    #     batch_size = x0.size(0)
+    #     input = torch.cat((x0, x1))
+    #     outputs = self(input)
+    #     y0, y1 = outputs.chunk(2)
+    #     loss = self.criterion(y0, y1)
+    #     print(loss)
+    #     self.log("validation/loss", loss, batch_size=batch_size)
+    #
+    #     return loss
+    #
+    # def on_validation_epoch_end(self):
+    #     # Access the current epoch loss
+    #     current_loss = self.trainer.callback_metrics.get('validation/loss')
+    #     # Check if the loss is NaN
+    #     if torch.isnan(current_loss):
+    #         self.nan_count += 1
+    #         print(f"Warning: NaN loss detected. NaN count = {self.nan_count}")
+    #     else:
+    #         self.nan_count = 0  # reset counter if the loss is not NaN
+    #
+    #     # Stop training if NaN loss happens for too many consecutive epochs
+    #     if self.nan_count >= self.nan_limit:
+    #         print("Stopping training due to NaN loss detected for 5 consecutive epochs.")
+    #         self.trainer.should_stop = True
 
-        y0, y1 = outputs.chunk(2)
+    # def on_test_start(self):
+    #     MOCO_test_accuracy = eval_knn(self.trainer.datamodule.test_dataloader(), self, self.device)
+    #     self.log('test/MOCO_test_accuracy', MOCO_test_accuracy, logger=True)
 
-        loss = self.criterion(y0, y1)
-        self.log("validation/loss", loss, batch_size=batch_size)
-
-        # KNN
-        batch_features = y0
-        batch_labels = labels
-
-        for k in self.k_choice:
-            pred_labels = knn_predict(batch_features, self.feature_bank, self.feature_labels, self.hparams.num_classes, k, self.hparams.KNN_temp)
-            # Calculate accuracy
-            correct = (pred_labels == batch_labels).sum().item()
-            accuracy = correct / batch_size
-            self.log(f"validation/{k}-NN_accuracy", accuracy, batch_size=batch_size)
-
-        return loss
-
-    def on_validation_epoch_end(self):
-        # Access the current epoch loss
-        current_loss = self.trainer.callback_metrics.get('validation/loss')
-        # Check if the loss is NaN
-        if torch.isnan(current_loss):
-            self.nan_count += 1
-            print(f"Warning: NaN loss detected. NaN count = {self.nan_count}")
-        else:
-            self.nan_count = 0  # reset counter if the loss is not NaN
-
-        # Stop training if NaN loss happens for too many consecutive epochs
-        if self.nan_count >= self.nan_limit:
-            print("Stopping training due to NaN loss detected for 5 consecutive epochs.")
-            self.trainer.should_stop = True
-
-    def on_test_start(self):
-        #TODO Debug
-        MOCO_test_accuracy = eval_knn(self.trainer.datamodule.test_dataloader(), self, self.device)
-        self.log('test/MOCO_test_accuracy', MOCO_test_accuracy, logger=True)
-
-        self.attn_imaging = self.hparams.att_logging_count > 0
-
-        # Assuming vanilla_training_loader is a DataLoader in the datamodule
-        vanilla_training_loader = self.trainer.datamodule.vanilla_training_loader()
-
-        for batch in vanilla_training_loader:
-            images, labels = batch
-            images = images.to(self.device)
-            labels = labels.to(self.device)
-            z = self.forward(images)
-            self._update_feature_bank(z, labels)
-
-
-    def test_step(self, batch, batch_idx):
-        # Forward pass
-        x0, labels = batch
-        batch_size = x0.size(0)
-        y0 = self(x0)
-
-        # Log the first 5 batches of weight
-        if batch_idx < self.hparams.att_logging_count:
-            self.log_attention_weights(labels)
-
-        # KNN
-        batch_features = y0
-
-        for k in self.k_choice:
-            random_seed = 123
-            torch.manual_seed(random_seed)
-
-            # Original test with 100% of the feature bank
-            pred_labels = knn_predict(batch_features, self.feature_bank, self.feature_labels, self.hparams.num_classes, k, self.hparams.KNN_temp)
-            correct = (pred_labels == labels).sum().item()
-            accuracy = correct / batch_size
-            self.log(f"test/{k}-NN_accuracy_100", accuracy, batch_size=batch_size)
-
-            # Test with 10% of the feature bank
-            sampled_feature_bank, sampled_feature_labels = sample_feature_bank(self.feature_bank, self.feature_labels, 0.10)
-            pred_labels = knn_predict(batch_features, sampled_feature_bank, sampled_feature_labels, self.hparams.num_classes, k, self.hparams.KNN_temp)
-            correct = (pred_labels == labels).sum().item()
-            accuracy = correct / batch_size
-            self.log(f"test/{k}-NN_accuracy_10", accuracy, batch_size=batch_size)
-
-        return accuracy
-
-
-    def on_test_end(self):
-        # Check if the best test accuracy exceeds 95%
-        test_accuracy = max([self.trainer.callback_metrics.get(f'test/{k}-NN_accuracy_100') for k in self.k_choice])
-        if test_accuracy and test_accuracy > 0.95:
-            checkpoint_path = f"{self.logger.experiment.dir}/best-checkpoint.ckpt"
-            self.trainer.save_checkpoint(checkpoint_path)
-            print(f"Checkpoint saved: {checkpoint_path} with test accuracy: {test_accuracy*100:.2f}%")
 
 
 
@@ -353,8 +249,6 @@ class TransFusionModel(pl.LightningModule):
         for idx, layer in enumerate(self.transfusion):
             if isinstance(layer, TransFusionBlock) and layer.attn_output_weights is not None:
                 attn_weights = layer.attn_output_weights.detach().cpu().numpy()
-                # print(attn_weights.shape)
-                #
 
                 for i in range(attn_weights.shape[0]):
                     attn_weights_i = attn_weights[i]
@@ -366,8 +260,6 @@ class TransFusionModel(pl.LightningModule):
                     plt.title(f"Sorted Attention Weights Layer {idx}")
                     plt.xlabel('Sorted Query Index')
                     plt.ylabel('Sorted Key Index')
-                    # plt.show()
-
 
                     buf = BytesIO()
                     plt.savefig(buf, format='png')

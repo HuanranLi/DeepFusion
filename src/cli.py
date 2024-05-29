@@ -29,11 +29,11 @@ from lightning.pytorch import Trainer, seed_everything
 
 def main(args):
 
-    seed_everything(123, workers=True)
+    seed_everything(123, workers=True) #
 
     # torch.set_float32_matmul_precision('medium')
     if args.dataset == 'MNIST':
-        data_module = DataModule_Template(input_size = args.input_size,
+        data_module = MNIST_DataModule(input_size = args.input_size,
                                     batch_size = args.batch_size)
     elif args.dataset == 'CIFAR10':
         data_module = CIFAR10DataModule(input_size = args.input_size,
@@ -59,33 +59,24 @@ def main(args):
                                 norm_type=args.norm_type,
                                 lr=args.lr,
                                 loss_temperature=args.loss_temperature,
-                                feature_bank_size=data_module.get_feature_bank_size(args.batch_size),
-                                num_classes=data_module.get_num_classes(),
-                                KNN_temp=args.KNN_temp,
                                 att_logging_count=args.att_logging_count,
                                 args=args)
 
     # Logger and checkpoint
     wandb_logger = WandbLogger(project="TransFusion", config = args)
 
-    # Set up ModelCheckpoint
-    checkpoint_callback = ModelCheckpoint(
-        monitor='validation/loss',  # or any other metric you have like 'val_loss'
-        save_top_k=1,  # Saves only the best checkpoint
-        mode='min',  # `min` for minimizing metric, `max` for maximizing metric
-        auto_insert_metric_name=False  # Prevents redundant metric names in filename
-    )
-
     # Trainer
     trainer = pl.Trainer(max_epochs=args.epochs,
                             accelerator=args.device,
                             logger=wandb_logger,
-                            callbacks=[checkpoint_callback],
                             deterministic=True)
 
     trainer.fit(model, datamodule=data_module)
-    test_results = trainer.test(ckpt_path='best',datamodule = data_module)
+    data_module.setup('test')
+    test_results = eval_knn(data_module.test_dataloader(), model, model.device)
 
+    print(test_results)
+    wandb.log({"test/Unsupervised_Accuracy": test_results})
     return model, test_results
 
 # Setting up the command line interface
@@ -120,7 +111,6 @@ if __name__ == '__main__':
     # Rest
     parser.add_argument('--backbone', type=str, default='CNN3', help='which backbone to train the images. (default: CNN3)')
     parser.add_argument('--output_size', type=int, default=512, help='output_size (default: 512)')
-    parser.add_argument('--KNN_temp', type=float, default=0.63, help='KNN_temp for KNN predictor (default: 0.63)')
     parser.add_argument('--FFN_benchmark', type=int, default=0, help='Benchmark mode. Default 0-false')
 
     # Not for Sweep hparams
