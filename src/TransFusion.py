@@ -25,6 +25,12 @@ from DataModule import *
 from KNN import *
 
 
+class BatchNorm1dNoBias(nn.BatchNorm1d):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bias.requires_grad = False
+
+
 # Function to sample a percentage of the feature bank
 def sample_feature_bank(feature_bank, feature_labels, percentage):
     num_samples = int(len(feature_bank) * percentage)
@@ -165,7 +171,12 @@ class TransFusionModel(pl.LightningModule):
                                                     norm_type=norm_type,
                                                     activation=args.activation))
 
-        self.transfusion_projector = nn.Linear(feature_dim, output_size)
+        # self.transfusion_projector = nn.Linear(feature_dim, output_size)
+        # ('bn2', BatchNorm1dNoBias(128)),
+        transfusion_projector = nn.Sequential(
+            nn.Linear(feature_dim, output_size),
+            BatchNorm1dNoBias(output_size)
+        )
         self.criterion = NTXentLoss(temperature=loss_temperature)
 
         self.nan_limit = 5

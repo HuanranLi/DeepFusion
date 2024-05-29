@@ -84,32 +84,32 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train TransFusion model on MNIST with wandb integration.")
 
     # Training
-    parser.add_argument('--dataset', type=str, default='MNIST',
+    parser.add_argument('--dataset', type=str, default='Tiny_ImageNet',
                             help='Choose the dataset to use: MNIST, CIFAR10 (default: MNIST).')
-    parser.add_argument('--batch_size', type=int, default=512, help='input batch size for training (default: 256)')
+    parser.add_argument('--batch_size', type=int, default=1024, help='input batch size for training (default: 256)')
     parser.add_argument('--input_size', type=int, default=32, help='input_size for image training (default: 32)')
     parser.add_argument('--loss_temperature', type=float, default=0.02, help='loss_temperature for contrastive loss')
-    parser.add_argument('--epochs', type=int, default=100, help='number of epochs to train (default: 100)')
+    parser.add_argument('--epochs', type=int, default=1000, help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=8e-5, help='learning rate (default: 8e-5)')
     parser.add_argument('--optimizer', type=str, choices=['Adam', 'AdamW', 'SGD'], default='SGD',
                         help='Choose the optimizer to use: Adam, AdamW, or SGD (default: SGD).')
     parser.add_argument('--scheduler', type=str, choices=['none', 'CosineAnnealingLR', 'ExponentialLR', 'ReduceLROnPlateau'],
-                        default='none', help='Choose the scheduler to use: none, CosineAnnealingLR, ExponentialLR, or ReduceLROnPlateau (default: none).')
+                        default='CosineAnnealingLR', help='Choose the scheduler to use: none, CosineAnnealingLR, ExponentialLR, or ReduceLROnPlateau (default: none).')
     parser.add_argument('--momentum', type=float, default=0.9, help='Set the momentum for the optimizer.')
     parser.add_argument('--weight_decay', type=float, default=0.0005, help='Set the weight decay for regularization.')
 
     # Model
     # TransFormer
-    parser.add_argument('--residual_attention', type=float, default=0, help='coeff of residual connection for Attention Layer (0 for no residual)')
-    parser.add_argument('--residual_ffn', type=float, default=0, help='coeff of residual connection for FFN layer (0 for no residual)')
+    parser.add_argument('--residual_attention', type=float, default=1, help='coeff of residual connection for Attention Layer (0 for no residual)')
+    parser.add_argument('--residual_ffn', type=float, default=1, help='coeff of residual connection for FFN layer (0 for no residual)')
     parser.add_argument('--feature_dim', type=int, default=256, help='feature_dim (default: 256)')
     parser.add_argument('--ff_dim', type=int, default=1024, help='feature_dim (default: 1024)')
     parser.add_argument('--num_layers', type=int, default=10, help='number of attention layers (default: 10)')
-    parser.add_argument('--num_heads', type=int, default=4, help='number of attention head (default: 4)')
-    parser.add_argument('--norm_type', type=str, default='batch', help='norm function to use (default: batch)')
-    parser.add_argument('--activation', type=str, default='ReLU', help='activation function to use (default: ReLU)')
+    parser.add_argument('--num_heads', type=int, default=16, help='number of attention head (default: 8)')
+    parser.add_argument('--norm_type', type=str, default='layer', help='norm function to use (default: layer)')
+    parser.add_argument('--activation', type=str, default='GELU', help='activation function to use (default: ReLU)')
     # Rest
-    parser.add_argument('--backbone', type=str, default='CNN3', help='which backbone to train the images. (default: CNN3)')
+    parser.add_argument('--backbone', type=str, default='resnet50', help='which backbone to train the images. (default: CNN3)')
     parser.add_argument('--output_size', type=int, default=512, help='output_size (default: 512)')
     parser.add_argument('--FFN_benchmark', type=int, default=0, help='Benchmark mode. Default 0-false')
 
