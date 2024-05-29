@@ -63,7 +63,7 @@ def main(args):
                                 args=args)
 
     # Logger and checkpoint
-    wandb_logger = WandbLogger(project="TransFusion", config = args)
+    wandb_logger = WandbLogger(project="DeepFusion", config = args)
 
     # Trainer
     trainer = pl.Trainer(max_epochs=args.epochs,
