@@ -173,7 +173,7 @@ class TransFusionModel(pl.LightningModule):
 
         # self.transfusion_projector = nn.Linear(feature_dim, output_size)
         # ('bn2', BatchNorm1dNoBias(128)),
-        transfusion_projector = nn.Sequential(
+        self.transfusion_projector = nn.Sequential(
             nn.Linear(feature_dim, output_size),
             BatchNorm1dNoBias(output_size)
         )
