@@ -103,3 +103,7 @@ class TinyImageNet(ImageFolder):
         assert 'val' in self.splits
         normalize_tin_val_folder_structure(
             os.path.join(self.dataset_folder, 'val'))
+
+if __name__ == '__main__':
+    train_dataset = TinyImageNet(root = '../datasets/', split = 'train', download = True)
+    test_dataset = TinyImageNet(root = '../datasets/', split = 'val', download = True)
