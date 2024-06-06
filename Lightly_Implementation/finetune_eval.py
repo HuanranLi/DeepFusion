@@ -135,3 +135,5 @@ def finetune_eval(
         print_rank_zero(
             f"max finetune {metric}: {max(metric_callback.val_metrics[metric])}"
         )
+
+        wandb.log({f"finetune/{metric}": max(metric_callback.val_metrics[metric])})

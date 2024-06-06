@@ -11,7 +11,7 @@ from lightly.data import LightlyDataset
 from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import LinearClassifier, MetricCallback
 from lightly.utils.dist import print_rank_zero
-
+import wandb
 
 def linear_eval(
     model: Module,
@@ -112,3 +112,4 @@ def linear_eval(
         print_rank_zero(
             f"max linear {metric}: {max(metric_callback.val_metrics[metric])}"
         )
+        wandb.log({f"linear/{metric}": max(metric_callback.val_metrics[metric])})

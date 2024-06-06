@@ -32,6 +32,8 @@ from lightly.data import LightlyDataset
 from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import MetricCallback
 from lightly.utils.dist import print_rank_zero
+import wandb
+
 
 parser = ArgumentParser("ImageNet ResNet50 Benchmarks")
 parser.add_argument("--train-dir", type=Path, default="../datasets/tiny-imagenet-200/train")
@@ -247,6 +249,7 @@ def pretrain(
     )
     for metric in ["val_online_cls_top1", "val_online_cls_top5"]:
         print_rank_zero(f"max {metric}: {max(metric_callback.val_metrics[metric])}")
+        wandb.log({f"online_cls/{metric}": max(metric_callback.val_metrics[metric])})
 
 
 if __name__ == "__main__":

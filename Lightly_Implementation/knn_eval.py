@@ -91,3 +91,4 @@ def knn_eval(
     )
     for metric in ["val_top1", "val_top5"]:
         print_rank_zero(f"knn {metric}: {max(metric_callback.val_metrics[metric])}")
+        wandb.log({f"knn/{metric}": max(metric_callback.val_metrics[metric])})
