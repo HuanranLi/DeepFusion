@@ -13,7 +13,7 @@ from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import LinearClassifier, MetricCallback
 from lightly.utils.dist import print_rank_zero
 from lightly.utils.scheduler import CosineWarmupScheduler
-
+import wandb
 
 class FinetuneEvalClassifier(LinearClassifier):
     def configure_optimizers(self):
