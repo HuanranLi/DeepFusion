@@ -24,6 +24,7 @@ from pytorch_lightning.callbacks import (
     LearningRateMonitor,
 )
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
 
@@ -49,7 +50,7 @@ parser.add_argument("--num-classes", type=int, default=200)
 parser.add_argument("--skip-knn-eval", action="store_true")
 parser.add_argument("--skip-linear-eval", action="store_true")
 parser.add_argument("--skip-finetune-eval", action="store_true")
-
+args = parser.parse_args()
 METHODS = {
     "barlowtwins": {
         "model": barlowtwins.BarlowTwins,
@@ -68,6 +69,7 @@ METHODS = {
 
 
 def main(
+    args,
     train_dir: Path,
     val_dir: Path,
     log_dir: Path,
@@ -229,7 +231,8 @@ def pretrain(
             DeviceStatsMonitor(),
             metric_callback,
         ],
-        logger=TensorBoardLogger(save_dir=str(log_dir), name="pretrain"),
+        # logger=TensorBoardLogger(save_dir=str(log_dir), name="pretrain"),
+        logger = WandbLogger(project="DeepFusion", config = args),
         precision=precision,
         strategy="ddp_find_unused_parameters_true",
         sync_batchnorm=accelerator != "cpu",  # Sync batchnorm is not supported on CPU.
@@ -248,4 +251,4 @@ def pretrain(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(**vars(args))
+    main(args, **vars(args))
