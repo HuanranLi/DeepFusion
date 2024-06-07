@@ -17,7 +17,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler
 from transfusion import *
 
 class SimCLR(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion, lr = 0.075) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
