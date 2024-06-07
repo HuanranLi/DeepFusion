@@ -55,6 +55,7 @@ parser.add_argument("--skip-finetune-eval", action="store_true")
 
 
 parser.add_argument("--transfusion", type=int, default=0)
+parser.add_argument("--lr", type=float, default=0.075)
 args = parser.parse_args()
 METHODS = {
     "barlowtwins": {
@@ -91,7 +92,8 @@ def main(
     skip_linear_eval: bool,
     skip_finetune_eval: bool,
     ckpt_path: Union[Path, None],
-    transfusion
+    transfusion: int,
+    lr: float,
 ) -> None:
     torch.set_float32_matmul_precision("high")
 
@@ -101,9 +103,14 @@ def main(
         method_dir = (
             log_dir / method / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         ).resolve()
-        model = METHODS[method]["model"](
-            batch_size_per_device=batch_size_per_device, num_classes=num_classes, transfusion = transfusion
-        )
+        if transfusion:
+            model = METHODS[method]["model"](
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes, transfusion = transfusion, lr = lr
+            )
+        else:
+            model = METHODS[method]["model"](
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes
+            )
 
         if compile_model and hasattr(torch, "compile"):
             # Compile model if PyTorch supports it.
