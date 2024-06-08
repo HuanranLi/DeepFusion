@@ -74,6 +74,8 @@ METHODS = {
 }
 
 
+logger = WandbLogger(project="DeepFusion", config = args)
+
 def main(
     args,
     train_dir: Path,
@@ -245,7 +247,7 @@ def pretrain(
             metric_callback,
         ],
         # logger=TensorBoardLogger(save_dir=str(log_dir), name="pretrain"),
-        logger = WandbLogger(project="DeepFusion", config = args),
+        logger = logger,
         precision=precision,
         strategy="ddp_find_unused_parameters_true",
         sync_batchnorm=accelerator != "cpu",  # Sync batchnorm is not supported on CPU.
