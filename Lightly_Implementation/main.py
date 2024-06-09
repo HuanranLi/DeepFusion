@@ -55,6 +55,8 @@ parser.add_argument("--skip-finetune-eval", action="store_true")
 
 
 parser.add_argument("--transfusion", type=int, default=0)
+parser.add_argument("--TF_hidden_dim", type=int, default=128)
+parser.add_argument("--TF_num_layers", type=int, default=5)
 parser.add_argument("--lr", type=float, default=0.075)
 args = parser.parse_args()
 METHODS = {
@@ -96,8 +98,11 @@ def main(
     ckpt_path: Union[Path, None],
     transfusion: int,
     lr: float,
+    TF_hidden_dim: int,
+    TF_num_layers: int
 ) -> None:
     torch.set_float32_matmul_precision("high")
+    wandb.init(project="DeepFusion", config = args)
 
     method_names = methods or METHODS.keys()
 
@@ -107,7 +112,7 @@ def main(
         ).resolve()
         if transfusion:
             model = METHODS[method]["model"](
-                batch_size_per_device=batch_size_per_device, num_classes=num_classes, transfusion = transfusion, lr = lr
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes, transfusion = transfusion, lr = lr, TF_hidden_dim = TF_hidden_dim, TF_num_layers = TF_num_layers
             )
         else:
             model = METHODS[method]["model"](
