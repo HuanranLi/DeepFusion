@@ -37,7 +37,9 @@ class TransFusion_Head(nn.Module):
     def __init__(self, input_dim: int = 2048,
                         hidden_dim: int = 128,
                         output_dim: int = 128,
-                        num_layers: int = 5):
+                        num_layers: int = 5,
+                        num_heads: int = 8,
+                        ff_ratio: int = 4):
         super(TransFusion_Head, self).__init__()
         # Construct layers with optional normalization
         self.pre_projector = nn.Linear(input_dim, hidden_dim)
@@ -45,8 +47,8 @@ class TransFusion_Head(nn.Module):
         self.head = []
         for _ in range(num_layers):
             self.head.append(TransFusionBlock(feature_dim=hidden_dim,
-                                                num_heads=8,
-                                                ff_dim=input_dim*4,
+                                                num_heads=num_heads,
+                                                ff_dim=input_dim*ff_ratio,
                                                 norm_type='layer',
                                                 activation='GELU'))
 
@@ -62,9 +64,9 @@ class TransFusion_Head(nn.Module):
 class TransFusionBlock(nn.Module):
     def __init__(self, feature_dim, num_heads, ff_dim, norm_type, activation):
         super(TransFusionBlock, self).__init__()
-        self.query = nn.Linear(feature_dim, feature_dim)
-        self.key = nn.Linear(feature_dim, feature_dim)
-        self.value = nn.Linear(feature_dim, feature_dim)
+        # self.query = nn.Linear(feature_dim, feature_dim)
+        # self.key = nn.Linear(feature_dim, feature_dim)
+        # self.value = nn.Linear(feature_dim, feature_dim)
         self.norm_type = norm_type
 
         self.attention = nn.MultiheadAttention(feature_dim, num_heads)
@@ -90,11 +92,11 @@ class TransFusionBlock(nn.Module):
 
     def forward(self, x, attn_imaging = False):
         # Query, key, value generation
-        q = self.query(x)
-        k = self.key(x)
-        v = self.value(x)
+        # q = self.query(x)
+        # k = self.key(x)
+        # v = self.value(x)
 
-        attn_output, self.attn_output_weights = self.attention(q, k, v, need_weights=attn_imaging, average_attn_weights=False)
+        attn_output, self.attn_output_weights = self.attention(x, x, x, need_weights=attn_imaging, average_attn_weights=False)
 
         # Residual connection and first normalization
         x = x + attn_output

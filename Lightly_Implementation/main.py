@@ -58,6 +58,10 @@ parser.add_argument("--transfusion", type=int, default=0)
 parser.add_argument("--TF_hidden_dim", type=int, default=128)
 parser.add_argument("--TF_num_layers", type=int, default=5)
 parser.add_argument("--lr", type=float, default=0.075)
+parser.add_argument("--ff_ratio", type=int, default=4)
+parser.add_argument("--num_heads", type=int, default=8)
+
+
 args = parser.parse_args()
 METHODS = {
     "barlowtwins": {
@@ -99,7 +103,9 @@ def main(
     transfusion: int,
     lr: float,
     TF_hidden_dim: int,
-    TF_num_layers: int
+    TF_num_layers: int,
+    num_heads: int,
+    ff_ratio: int,
 ) -> None:
     torch.set_float32_matmul_precision("high")
     wandb.init(project="DeepFusion", config = args)
@@ -112,7 +118,10 @@ def main(
         ).resolve()
         if transfusion:
             model = METHODS[method]["model"](
-                batch_size_per_device=batch_size_per_device, num_classes=num_classes, transfusion = transfusion, lr = lr, TF_hidden_dim = TF_hidden_dim, TF_num_layers = TF_num_layers
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes,
+                transfusion = transfusion, lr = lr,
+                TF_hidden_dim = TF_hidden_dim, TF_num_layers = TF_num_layers,
+                num_heads = num_heads, ff_ratio = ff_ratio,
             )
         else:
             model = METHODS[method]["model"](
