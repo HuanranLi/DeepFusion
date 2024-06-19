@@ -79,8 +79,9 @@ METHODS = {
     "vicreg": {"model": vicreg.VICReg, "transform": vicreg.transform},
 }
 
-
 logger = WandbLogger(project="DeepFusion", config = args)
+wandb.init(project="DeepFusion", config = args)
+
 
 def main(
     args,
@@ -108,7 +109,6 @@ def main(
     ff_ratio: int,
 ) -> None:
     torch.set_float32_matmul_precision("high")
-    wandb.init(project="DeepFusion", config = args)
 
     method_names = methods or METHODS.keys()
 
