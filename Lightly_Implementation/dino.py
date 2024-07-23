@@ -23,7 +23,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler, cosine_schedule
 from transfusion import *
 
 class DINO(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -31,7 +31,11 @@ class DINO(LightningModule):
         resnet = resnet50()
         resnet.fc = Identity()  # Ignore classification head
         self.backbone = resnet
-        self.projection_head = DINOProjectionHead(freeze_last_layer=1)
+        if transfusion:
+            self.projection_head = TransFusion_Head(hidden_dim = TF_hidden_dim, num_layers = TF_num_layers, num_heads = num_heads, ff_ratio = ff_ratio)
+        else:
+            self.projection_head = DINOProjectionHead(freeze_last_layer=1)
+            
         self.student_backbone = copy.deepcopy(self.backbone)
         self.student_projection_head = DINOProjectionHead()
         self.criterion = DINOLoss()
