@@ -33,6 +33,7 @@ from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import MetricCallback
 from lightly.utils.dist import print_rank_zero
 import wandb
+# from multiprocessing import Process, freeze_support
 
 
 parser = ArgumentParser("ImageNet ResNet50 Benchmarks")
@@ -280,5 +281,7 @@ def pretrain(
 
 
 if __name__ == "__main__":
+    # freeze_support()
     args = parser.parse_args()
+
     main(args, **vars(args))
