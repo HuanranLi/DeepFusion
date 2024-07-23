@@ -18,7 +18,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler, cosine_schedule
 from transfusion import *
 
 class BYOL(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.45, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -30,7 +30,7 @@ class BYOL(LightningModule):
             self.projection_head = TransFusion_Head(hidden_dim = TF_hidden_dim, num_layers = TF_num_layers, num_heads = num_heads, ff_ratio = ff_ratio)
         else:
             self.projection_head = BYOLProjectionHead()
-            
+
         self.prediction_head = BYOLPredictionHead()
         self.teacher_backbone = copy.deepcopy(self.backbone)
         self.teacher_projection_head = BYOLProjectionHead()
@@ -130,7 +130,7 @@ class BYOL(LightningModule):
             # Settings follow original code for 100 epochs which are slightly different
             # from the paper, see:
             # https://github.com/deepmind/deepmind-research/blob/f5de0ede8430809180254ee957abf36ed62579ef/byol/configs/byol.py#L21-L23
-            lr=0.45 * self.batch_size_per_device * self.trainer.world_size / 256,
+            lr=self.hparams.lr  * self.batch_size_per_device * self.trainer.world_size / 256,
             momentum=0.9,
             weight_decay=1e-6,
         )

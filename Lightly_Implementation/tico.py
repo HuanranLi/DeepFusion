@@ -21,7 +21,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler, cosine_schedule
 from transfusion import *
 
 class TiCo(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.2, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -119,7 +119,7 @@ class TiCo(LightningModule):
                     "weight_decay": 0.0,
                 },
             ],
-            lr=0.2 * self.batch_size_per_device * self.trainer.world_size / 256,
+            lr=self.hparams.lr  * self.batch_size_per_device * self.trainer.world_size / 256,
             momentum=0.9,
             weight_decay=1.5e-6,
         )

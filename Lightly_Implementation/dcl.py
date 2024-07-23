@@ -30,7 +30,7 @@ class DCL(LightningModule):
             self.projection_head = TransFusion_Head(hidden_dim = TF_hidden_dim, num_layers = TF_num_layers, num_heads = num_heads, ff_ratio = ff_ratio)
         else:
             self.projection_head = SimCLRProjectionHead()  # DCL uses SimCLR head
-            
+
         self.criterion = DCLLoss(temperature=0.1, gather_distributed=True)
 
         self.online_classifier = OnlineLinearClassifier(num_classes=num_classes)
@@ -93,7 +93,7 @@ class DCL(LightningModule):
             # linear scaling can be used for larger batches and longer training:
             #   lr=0.3 * self.batch_size_per_device * self.trainer.world_size / 256
             # See Appendix B.1. in the SimCLR paper https://arxiv.org/abs/2002.05709
-            lr=0.075 * math.sqrt(self.batch_size_per_device * self.trainer.world_size),
+            lr=self.hparams.lr  * math.sqrt(self.batch_size_per_device * self.trainer.world_size),
             momentum=0.9,
             # Note: Paper uses weight decay of 1e-6 but reference code 1e-4. See:
             # https://github.com/google-research/simclr/blob/2fc637bdd6a723130db91b377ac15151e01e4fc2/README.md?plain=1#L103

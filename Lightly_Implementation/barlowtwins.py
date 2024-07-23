@@ -17,7 +17,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler
 from transfusion import *
 
 class BarlowTwins(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.2, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -91,7 +91,7 @@ class BarlowTwins(LightningModule):
                     "weight_decay": 0.0,
                 },
             ],
-            lr=0.2 * lr_factor,
+            lr=self.hparams.lr  * lr_factor,
             momentum=0.9,
             weight_decay=1.5e-6,
         )

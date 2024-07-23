@@ -21,7 +21,7 @@ CROP_COUNTS: Tuple[int, int] = (2, 6)
 from transfusion import *
 
 class SwAV(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.075, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.6, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -33,7 +33,7 @@ class SwAV(LightningModule):
             self.projection_head = TransFusion_Head(hidden_dim = TF_hidden_dim, num_layers = TF_num_layers, num_heads = num_heads, ff_ratio = ff_ratio)
         else:
             self.projection_head = SwaVProjectionHead()
-            
+
         self.prototypes = SwaVPrototypes(n_steps_frozen_prototypes=1)
         self.criterion = SwaVLoss(sinkhorn_gather_distributed=True)
         self.online_classifier = OnlineLinearClassifier(num_classes=num_classes)
@@ -153,7 +153,7 @@ class SwAV(LightningModule):
             # Smaller learning rate for smaller batches: lr=0.6 for batch_size=256
             # scaled linearly by batch size to lr=4.8 for batch_size=2048.
             # See Appendix A.1. and A.6. in SwAV paper https://arxiv.org/pdf/2006.09882.pdf
-            lr=0.6 * (self.batch_size_per_device * self.trainer.world_size) / 256,
+            lr=self.hparams.lr  * (self.batch_size_per_device * self.trainer.world_size) / 256,
             momentum=0.9,
             weight_decay=1e-6,
         )
