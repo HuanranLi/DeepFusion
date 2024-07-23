@@ -13,7 +13,7 @@ from lightly.transforms.vicreg_transform import VICRegTransform
 from lightly.utils.benchmarking import OnlineLinearClassifier
 from lightly.utils.lars import LARS
 from lightly.utils.scheduler import CosineWarmupScheduler
-
+from transfusion import *
 
 class VICReg(LightningModule):
     def __init__(self, batch_size_per_device: int, num_classes: int) -> None:

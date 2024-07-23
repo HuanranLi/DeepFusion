@@ -18,7 +18,7 @@ from lightly.transforms import BYOLTransform
 from lightly.utils.benchmarking import OnlineLinearClassifier
 from lightly.utils.lars import LARS
 from lightly.utils.scheduler import CosineWarmupScheduler, cosine_schedule
-
+from transfusion import *
 
 class TiCo(LightningModule):
     def __init__(self, batch_size_per_device: int, num_classes: int) -> None:

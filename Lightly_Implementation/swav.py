@@ -18,7 +18,7 @@ from lightly.utils.lars import LARS
 from lightly.utils.scheduler import CosineWarmupScheduler
 
 CROP_COUNTS: Tuple[int, int] = (2, 6)
-
+from transfusion import *
 
 class SwAV(LightningModule):
     def __init__(self, batch_size_per_device: int, num_classes: int) -> None:

@@ -14,7 +14,7 @@ from lightly.transforms import SimCLRTransform
 from lightly.utils.benchmarking import OnlineLinearClassifier
 from lightly.utils.lars import LARS
 from lightly.utils.scheduler import CosineWarmupScheduler
-
+from transfusion import *
 
 class DCLW(LightningModule):
     def __init__(self, batch_size_per_device: int, num_classes: int) -> None:
