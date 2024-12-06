@@ -17,7 +17,7 @@ from lightly.utils.scheduler import CosineWarmupScheduler
 from transfusion import *
 
 class BarlowTwins(LightningModule):
-    def __init__(self, batch_size_per_device: int, num_classes: int, transfusion = 0, lr = 0.2, TF_hidden_dim = 128, TF_num_layers = 5, num_heads = 8, ff_ratio = 4) -> None:
+    def __init__(self, batch_size_per_device: int, num_classes: int, lr = 0.2, TF_num_layers = 5) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.batch_size_per_device = batch_size_per_device
@@ -25,10 +25,15 @@ class BarlowTwins(LightningModule):
         resnet = resnet50()
         resnet.fc = Identity()  # Ignore classification head
         self.backbone = resnet
-        if transfusion:
-            self.projection_head = TransFusion_Head(hidden_dim = TF_hidden_dim, num_layers = TF_num_layers, num_heads = num_heads, ff_ratio = ff_ratio)
-        else:
-            self.projection_head = BarlowTwinsProjectionHead()
+        self.projection_head = BarlowTwinsProjectionHead()
+        if TF_num_layers > 0:
+            self.projection_head = nn.Sequential(\
+                        TransFusion_Head(feature_dim = 2048, \
+                                        num_layers = TF_num_layers, \
+                                        num_heads = 8, \
+                                        ff_ratio = 4),
+                        self.projection_head)
+
         self.criterion = BarlowTwinsLoss(lambda_param=5e-3, gather_distributed=True)
 
         self.online_classifier = OnlineLinearClassifier(num_classes=num_classes)

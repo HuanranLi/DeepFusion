@@ -3,6 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Sequence, Union
 
+from multiprocessing import freeze_support
+
 import barlowtwins
 import byol
 import dcl
@@ -33,55 +35,6 @@ from lightly.transforms.utils import IMAGENET_NORMALIZE
 from lightly.utils.benchmarking import MetricCallback
 from lightly.utils.dist import print_rank_zero
 import wandb
-# from multiprocessing import Process, freeze_support
-
-
-parser = ArgumentParser("ImageNet ResNet50 Benchmarks")
-parser.add_argument("--train-dir", type=Path, default="../datasets/tiny-imagenet-200/train")
-parser.add_argument("--val-dir", type=Path, default="../datasets/tiny-imagenet-200/val")
-parser.add_argument("--log-dir", type=Path, default="benchmark_logs")
-parser.add_argument("--batch-size-per-device", type=int, default=128)
-parser.add_argument("--epochs", type=int, default=100)
-parser.add_argument("--num-workers", type=int, default=8)
-parser.add_argument("--accelerator", type=str, default="gpu")
-parser.add_argument("--devices", type=int, default=1)
-parser.add_argument("--precision", type=str, default="16-mixed")
-parser.add_argument("--ckpt-path", type=Path, default=None)
-parser.add_argument("--compile-model", action="store_true")
-parser.add_argument("--methods", type=str, nargs="+")
-parser.add_argument("--num-classes", type=int, default=200)
-parser.add_argument("--skip-knn-eval", action="store_true")
-parser.add_argument("--skip-linear-eval", action="store_true")
-parser.add_argument("--skip-finetune-eval", action="store_true")
-
-
-parser.add_argument("--transfusion", type=int, default=0)
-parser.add_argument("--TF_hidden_dim", type=int, default=128)
-parser.add_argument("--TF_num_layers", type=int, default=5)
-parser.add_argument("--lr", type=float, default=0.075)
-parser.add_argument("--ff_ratio", type=int, default=4)
-parser.add_argument("--num_heads", type=int, default=8)
-
-
-args = parser.parse_args()
-METHODS = {
-    "barlowtwins": {
-        "model": barlowtwins.BarlowTwins,
-        "transform": barlowtwins.transform,
-    },
-    "byol": {"model": byol.BYOL, "transform": byol.transform},
-    "dcl": {"model": dcl.DCL, "transform": dcl.transform},
-    "dclw": {"model": dclw.DCLW, "transform": dclw.transform},
-    "dino": {"model": dino.DINO, "transform": dino.transform},
-    "mocov2": {"model": mocov2.MoCoV2, "transform": mocov2.transform},
-    "simclr": {"model": simclr.SimCLR, "transform": simclr.transform},
-    "swav": {"model": swav.SwAV, "transform": swav.transform},
-    "tico": {"model": tico.TiCo, "transform": tico.transform},
-    "vicreg": {"model": vicreg.VICReg, "transform": vicreg.transform},
-}
-
-logger = WandbLogger(project="DeepFusion", config = args)
-wandb.init(project="DeepFusion", config = args)
 
 
 def main(
@@ -102,12 +55,8 @@ def main(
     skip_linear_eval: bool,
     skip_finetune_eval: bool,
     ckpt_path: Union[Path, None],
-    transfusion: int,
-    lr: float,
-    TF_hidden_dim: int,
+    # lr: float,
     TF_num_layers: int,
-    num_heads: int,
-    ff_ratio: int,
 ) -> None:
     torch.set_float32_matmul_precision("high")
 
@@ -117,17 +66,11 @@ def main(
         method_dir = (
             log_dir / method / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         ).resolve()
-        if transfusion:
-            model = METHODS[method]["model"](
-                batch_size_per_device=batch_size_per_device, num_classes=num_classes,
-                transfusion = transfusion, lr = lr,
-                TF_hidden_dim = TF_hidden_dim, TF_num_layers = TF_num_layers,
-                num_heads = num_heads, ff_ratio = ff_ratio,
-            )
-        else:
-            model = METHODS[method]["model"](
-                batch_size_per_device=batch_size_per_device, num_classes=num_classes
-            )
+
+        model = METHODS[method]["model"](
+            batch_size_per_device=batch_size_per_device, num_classes=num_classes,
+            TF_num_layers = TF_num_layers #lr = lr,
+        )
 
         if compile_model and hasattr(torch, "compile"):
             # Compile model if PyTorch supports it.
@@ -264,7 +207,7 @@ def pretrain(
         # logger=TensorBoardLogger(save_dir=str(log_dir), name="pretrain"),
         logger = logger,
         precision=precision,
-        strategy="ddp_find_unused_parameters_true",
+        strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
         sync_batchnorm=accelerator != "cpu",  # Sync batchnorm is not supported on CPU.
         num_sanity_val_steps=0,
     )
@@ -281,7 +224,49 @@ def pretrain(
 
 
 if __name__ == "__main__":
-    # freeze_support()
+
+    parser = ArgumentParser("ImageNet ResNet50 Benchmarks")
+    parser.add_argument("--train-dir", type=Path, default="../datasets/tiny-imagenet-200/train")
+    parser.add_argument("--val-dir", type=Path, default="../datasets/tiny-imagenet-200/val")
+    parser.add_argument("--log-dir", type=Path, default="benchmark_logs")
+    parser.add_argument("--batch-size-per-device", type=int, default=128)
+    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--num-workers", type=int, default=8)
+    parser.add_argument("--accelerator", type=str, default="gpu")
+    parser.add_argument("--devices", type=int, default=1)
+    parser.add_argument("--precision", type=str, default="16-mixed")
+    parser.add_argument("--ckpt-path", type=Path, default=None)
+    parser.add_argument("--compile-model", action="store_true")
+    parser.add_argument("--methods", type=str, nargs="+")
+    parser.add_argument("--num-classes", type=int, default=200)
+    parser.add_argument("--skip-knn-eval", action="store_true")
+    parser.add_argument("--skip-linear-eval", action="store_true")
+    parser.add_argument("--skip-finetune-eval", action="store_true")
+
+
+    parser.add_argument("--TF_num_layers", type=int, default=5)
+    # parser.add_argument("--lr", type=float, default=0.075)
+
+
     args = parser.parse_args()
+    METHODS = {
+        "barlowtwins": {
+            "model": barlowtwins.BarlowTwins,
+            "transform": barlowtwins.transform,
+        },
+        "byol": {"model": byol.BYOL, "transform": byol.transform},
+        "dcl": {"model": dcl.DCL, "transform": dcl.transform},
+        "dclw": {"model": dclw.DCLW, "transform": dclw.transform},
+        "dino": {"model": dino.DINO, "transform": dino.transform},
+        "mocov2": {"model": mocov2.MoCoV2, "transform": mocov2.transform},
+        "simclr": {"model": simclr.SimCLR, "transform": simclr.transform},
+        "swav": {"model": swav.SwAV, "transform": swav.transform},
+        "tico": {"model": tico.TiCo, "transform": tico.transform},
+        "vicreg": {"model": vicreg.VICReg, "transform": vicreg.transform},
+    }
+
+    logger = WandbLogger(project="DeepFusion", config = args)
+    wandb.init(project="DeepFusion", config = args)
+
 
     main(args, **vars(args))
