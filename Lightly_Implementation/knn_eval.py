@@ -81,7 +81,7 @@ def knn_eval(
             DeviceStatsMonitor(),
             metric_callback,
         ],
-        strategy="ddp_find_unused_parameters_true",
+        strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
         num_sanity_val_steps=0,
     )
     trainer.fit(

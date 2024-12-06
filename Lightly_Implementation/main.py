@@ -3,7 +3,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Sequence, Union
 
-from multiprocessing import freeze_support
 
 import barlowtwins
 import byol
