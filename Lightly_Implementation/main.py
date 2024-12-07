@@ -265,7 +265,7 @@ if __name__ == "__main__":
     }
 
     logger = WandbLogger(project="DeepFusion", config = args)
-    wandb.init(project="DeepFusion", config = args)
+    # wandb.init(project="DeepFusion", config = args)
 
 
     main(args, **vars(args))
