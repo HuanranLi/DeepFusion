@@ -203,7 +203,6 @@ def pretrain(
             DeviceStatsMonitor(),
             metric_callback,
         ],
-        # logger=TensorBoardLogger(save_dir=str(log_dir), name="pretrain"),
         logger = logger,
         precision=precision,
         strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
@@ -244,7 +243,6 @@ if __name__ == "__main__":
 
 
     parser.add_argument("--TF_num_layers", type=int, default=5)
-    # parser.add_argument("--lr", type=float, default=0.075)
 
 
     args = parser.parse_args()
@@ -265,7 +263,6 @@ if __name__ == "__main__":
     }
 
     logger = WandbLogger(project="DeepFusion", config = args)
-    # wandb.init(project="DeepFusion", config = args)
 
 
     main(args, **vars(args))
