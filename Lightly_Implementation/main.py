@@ -205,7 +205,8 @@ def pretrain(
         ],
         logger = logger,
         precision=precision,
-        strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
+        # strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
+        strategy = 'auto',
         sync_batchnorm=accelerator != "cpu",  # Sync batchnorm is not supported on CPU.
         num_sanity_val_steps=0,
     )
