@@ -124,7 +124,7 @@ def main(
                 log_dir=method_dir,
                 batch_size_per_device=batch_size_per_device * 12,
                 # num_workers=num_workers,
-                num_workers = 4 ,
+                num_workers = 2 ,
                 accelerator=accelerator,
                 devices=devices,
                 precision=precision,
