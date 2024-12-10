@@ -271,4 +271,4 @@ if __name__ == "__main__":
     # wandb.init()
 
 
-    main(args, **vars(args), logger)
+    main(args, logger = logger, **vars(args))
