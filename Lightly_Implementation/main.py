@@ -263,7 +263,7 @@ if __name__ == "__main__":
         "vicreg": {"model": vicreg.VICReg, "transform": vicreg.transform},
     }
 
-    logger = WandbLogger(project="DeepFusion", config = args)
+    logger = WandbLogger(project="DeepFusion-ICML", config = args)
     # wandb.init()
 
 
