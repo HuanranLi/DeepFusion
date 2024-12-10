@@ -200,6 +200,7 @@ def pretrain(
     # Train model.
     metric_callback = MetricCallback()
     trainer = Trainer(
+        default_root_dir = log_dir,
         max_epochs=epochs,
         accelerator=accelerator,
         devices=devices,
