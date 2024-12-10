@@ -56,6 +56,7 @@ def main(
     ckpt_path: Union[Path, None],
     # lr: float,
     TF_num_layers: int,
+    logger,
 ) -> None:
     torch.set_float32_matmul_precision("high")
 
@@ -94,6 +95,7 @@ def main(
                 devices=devices,
                 precision=precision,
                 ckpt_path=ckpt_path,
+                logger = logger
             )
 
         if skip_knn_eval:
@@ -120,11 +122,12 @@ def main(
                 train_dir=train_dir,
                 val_dir=val_dir,
                 log_dir=method_dir,
-                batch_size_per_device=batch_size_per_device,
+                batch_size_per_device=batch_size_per_device * 8,
                 num_workers=num_workers,
                 accelerator=accelerator,
                 devices=devices,
                 precision=precision,
+                logger = logger
             )
 
         if skip_finetune_eval:
@@ -157,6 +160,7 @@ def pretrain(
     devices: int,
     precision: str,
     ckpt_path: Union[Path, None],
+    logger
 ) -> None:
     print_rank_zero(f"Running pretraining for {method}...")
 
@@ -267,4 +271,4 @@ if __name__ == "__main__":
     # wandb.init()
 
 
-    main(args, **vars(args))
+    main(args, **vars(args), logger)

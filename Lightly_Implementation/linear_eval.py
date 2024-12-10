@@ -24,6 +24,7 @@ def linear_eval(
     devices: int,
     precision: str,
     num_classes: int,
+    logger
 ) -> None:
     """Runs a linear evaluation on the given model.
 
@@ -91,7 +92,8 @@ def linear_eval(
             DeviceStatsMonitor(),
             metric_callback,
         ],
-        logger=TensorBoardLogger(save_dir=str(log_dir), name="linear_eval"),
+        # logger=TensorBoardLogger(save_dir=str(log_dir), name="linear_eval"),
+        logger = logger,
         precision=precision,
         # strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
         strategy = 'auto',
