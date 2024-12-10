@@ -105,9 +105,9 @@ class SimCLR(LightningModule):
             "scheduler": CosineWarmupScheduler(
                 optimizer=optimizer,
                 warmup_epochs=int(
-                    self.trainer.estimated_stepping_batches
+                    (self.trainer.estimated_stepping_batches
                     / self.trainer.max_epochs
-                    * 10
+                    * 10) if self.trainer.max_epochs > 1 else 0
                 ),
                 max_epochs=int(self.trainer.estimated_stepping_batches),
             ),
