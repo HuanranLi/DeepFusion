@@ -243,7 +243,7 @@ if __name__ == "__main__":
     parser.add_argument("--skip-finetune-eval", action="store_true")
 
 
-    parser.add_argument("--TF_num_layers", type=int, default=5)
+    parser.add_argument("--TF_num_layers", type=int, default=0)
 
 
     args = parser.parse_args()
