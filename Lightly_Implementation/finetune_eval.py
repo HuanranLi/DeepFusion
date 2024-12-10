@@ -47,6 +47,7 @@ def finetune_eval(
     devices: int,
     precision: str,
     num_classes: int,
+    logger,
 ) -> None:
     """Runs fine-tune evaluation on the given model.
 
@@ -114,7 +115,8 @@ def finetune_eval(
             DeviceStatsMonitor(),
             metric_callback,
         ],
-        logger=TensorBoardLogger(save_dir=str(log_dir), name="finetune_eval"),
+        # logger=TensorBoardLogger(save_dir=str(log_dir), name="finetune_eval"),
+        logger = logger,
         precision=precision,
         # strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
         strategy = 'auto',

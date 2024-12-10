@@ -111,6 +111,7 @@ def main(
                 num_workers=num_workers,
                 accelerator=accelerator,
                 devices=devices,
+                logger = logger
             )
 
         if skip_linear_eval:
@@ -122,9 +123,9 @@ def main(
                 train_dir=train_dir,
                 val_dir=val_dir,
                 log_dir=method_dir,
-                batch_size_per_device=batch_size_per_device * 12,
+                batch_size_per_device=batch_size_per_device,
                 # num_workers=num_workers,
-                num_workers = 2 ,
+                num_workers = num_workers ,
                 accelerator=accelerator,
                 devices=devices,
                 precision=precision,
@@ -145,6 +146,7 @@ def main(
                 accelerator=accelerator,
                 devices=devices,
                 precision=precision,
+                logger = logger
             )
 
 

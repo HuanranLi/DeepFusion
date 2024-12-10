@@ -23,6 +23,7 @@ def knn_eval(
     accelerator: str,
     devices: int,
     num_classes: int,
+    logger,
 ) -> None:
     """Runs KNN evaluation on the given model.
 
@@ -76,7 +77,8 @@ def knn_eval(
         max_epochs=1,
         accelerator=accelerator,
         devices=devices,
-        logger=TensorBoardLogger(save_dir=str(log_dir), name="knn_eval"),
+        # logger=TensorBoardLogger(save_dir=str(log_dir), name="knn_eval"),
+        logger = logger,
         callbacks=[
             DeviceStatsMonitor(),
             metric_callback,
