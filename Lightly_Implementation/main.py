@@ -231,6 +231,8 @@ def pretrain(
 
 
 if __name__ == "__main__":
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     parser = ArgumentParser("ImageNet ResNet50 Benchmarks")
     parser.add_argument("--train-dir", type=Path, default="../datasets/tiny-imagenet-200/train")
