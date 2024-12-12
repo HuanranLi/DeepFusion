@@ -115,4 +115,4 @@ def linear_eval(
         print_rank_zero(
             f"max linear {metric}: {max(metric_callback.val_metrics[metric])}"
         )
-        wandb.log({f"linear/{metric}": max(metric_callback.val_metrics[metric])})
+        logger.log_metrics({f"linear/{metric}": max(metric_callback.val_metrics[metric])})

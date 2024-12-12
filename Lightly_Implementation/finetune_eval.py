@@ -139,4 +139,4 @@ def finetune_eval(
             f"max finetune {metric}: {max(metric_callback.val_metrics[metric])}"
         )
 
-        wandb.log({f"finetune/{metric}": max(metric_callback.val_metrics[metric])})
+        logger.log_metrics({f"finetune/{metric}": max(metric_callback.val_metrics[metric])})
