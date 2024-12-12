@@ -226,8 +226,12 @@ def pretrain(
         ckpt_path=ckpt_path,
     )
     for metric in ["val_online_cls_top1", "val_online_cls_top5"]:
+        if "val_online_cls_top1" not in metric_callback.val_metrics or \
+            "val_online_cls_top5" not in metric_callback.val_metrics:
+            break
+            
         print_rank_zero(f"max {metric}: {max(metric_callback.val_metrics[metric])}")
-        wandb.log({f"online_cls/{metric}": max(metric_callback.val_metrics[metric])})
+        logger.log_metrics({f"online_cls/{metric}": max(metric_callback.val_metrics[metric])})
 
 
 if __name__ == "__main__":
