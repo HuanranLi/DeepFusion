@@ -118,8 +118,8 @@ def finetune_eval(
         # logger=TensorBoardLogger(save_dir=str(log_dir), name="finetune_eval"),
         logger = logger,
         precision=precision,
-        # strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
-        strategy = 'auto',
+        strategy="ddp_find_unused_parameters_true" if accelerator == 'gpu' else 'auto',
+        # strategy = 'auto',
         num_sanity_val_steps=0,
     )
     classifier = FinetuneEvalClassifier(
