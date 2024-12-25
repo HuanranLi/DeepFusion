@@ -54,7 +54,7 @@ def main(
     skip_linear_eval: bool,
     skip_finetune_eval: bool,
     ckpt_path: Union[Path, None],
-    # lr: float,
+    lr: float,
     TF_num_layers: int,
     logger,
 ) -> None:
@@ -67,10 +67,16 @@ def main(
             log_dir / method / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         ).resolve()
 
-        model = METHODS[method]["model"](
-            batch_size_per_device=batch_size_per_device, num_classes=num_classes,
-            TF_num_layers = TF_num_layers #lr = lr,
-        )
+        if lr != 0:
+            model = METHODS[method]["model"](
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes,
+                TF_num_layers = TF_num_layers, lr = lr,
+                )
+        else:
+            model = METHODS[method]["model"](
+                batch_size_per_device=batch_size_per_device, num_classes=num_classes,
+                TF_num_layers = TF_num_layers
+                )
 
         if compile_model and hasattr(torch, "compile"):
             # Compile model if PyTorch supports it.
@@ -229,7 +235,7 @@ def pretrain(
         if "val_online_cls_top1" not in metric_callback.val_metrics or \
             "val_online_cls_top5" not in metric_callback.val_metrics:
             break
-            
+
         print_rank_zero(f"max {metric}: {max(metric_callback.val_metrics[metric])}")
         logger.log_metrics({f"online_cls/{metric}": max(metric_callback.val_metrics[metric])})
 
@@ -258,6 +264,8 @@ if __name__ == "__main__":
 
 
     parser.add_argument("--TF_num_layers", type=int, default=0)
+    parser.add_argument("--lr", type=float, default=0)
+
 
 
     args = parser.parse_args()
